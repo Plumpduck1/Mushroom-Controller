@@ -11,116 +11,384 @@
 
 <body>
 
-    <h1>Mushroom Controller</h1>
+    <div class="container">
 
-    <p>Humidity: <span id="humidity">--</span>%</p>
-    <p>CO2: <span id="co2">--</span> ppm</p>
-    <p>Temperature: <span id="temperature">--</span>°C</p>
+        <div class="header">
 
-    <hr>
+            <h1>Mushroom Controller</h1>
 
-    <p>Fan: <span id="fan">--</span></p>
-    <p>Mister: <span id="mister">--</span></p>
-    <p>Mode: <span id="mode">--</span></p>
+            <div class="status-pill auto-pill" id="modePill">
+                AUTO MODE
+            </div>
 
-    <hr>
+        </div>
 
-    <button
-        onclick="fetch('/toggle-auto')"
-        title="AUTO mode lets the system control fan and mister automatically based on humidity and CO2 thresholds. MANUAL mode disables automation so you can control devices yourself."
-    >
-        Toggle AUTO
-    </button>
+        <div
+            id="alarmBanner"
+            class="banner alarm-banner"
+            style="display:none;"
+        >
+            ⚠️ <span id="alarmText"></span>
+        </div>
 
-    <br><br>
+        <div
+            id="sensorBanner"
+            class="banner sensor-banner"
+            style="display:none;"
+        >
+            🔧 <span id="sensorText"></span>
+        </div>
 
-    <button
-        onclick="fetch('/fan/on')"
-        title="Turns fan ON. Fan lowers CO2 by bringing in fresh air, but also slightly lowers humidity."
-    >
-        Fan ON
-    </button>
+        <div class="stats-grid">
 
-    <button
-        onclick="fetch('/fan/off')"
-        title="Turns fan OFF. CO2 will slowly build up again, and humidity will stabilize more easily."
-    >
-        Fan OFF
-    </button>
+            <div class="card">
 
-    <br><br>
+                <h3>Humidity</h3>
 
-    <button
-        onclick="fetch('/mister/on')"
-        title="Turns mister ON. Mister increases chamber humidity."
-    >
-        Mister ON
-    </button>
+                <div class="big-stat">
+                    <span id="humidity">--</span>%
+                </div>
 
-    <button
-        onclick="fetch('/mister/off')"
-        title="Turns mister OFF. Humidity will slowly decrease naturally over time."
-    >
-        Mister OFF
-    </button>
+            </div>
 
-    <hr>
+            <div class="card">
 
-    <h2>Humidity History</h2>
-    <canvas id="humidityChart"></canvas>
+                <h3>CO2</h3>
 
-    <h2>CO2 History</h2>
-    <canvas id="co2Chart"></canvas>
+                <div class="big-stat">
+                    <span id="co2">--</span>
+                    <span class="unit">ppm</span>
+                </div>
+
+            </div>
+
+            <div class="card">
+
+                <h3>Temperature</h3>
+
+                <div class="big-stat">
+                    <span id="temperature">--</span>
+                    <span class="unit">°C</span>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="controls-grid">
+
+            <div class="card">
+
+                <h2>Device Status</h2>
+
+                <div class="device-row">
+                    <span>Fan</span>
+                    <span class="device-state" id="fan">--</span>
+                </div>
+
+                <div class="device-row">
+                    <span>Mister</span>
+                    <span class="device-state" id="mister">--</span>
+                </div>
+
+                <div class="device-row">
+                    <span>Mode</span>
+                    <span class="device-state" id="mode">--</span>
+                </div>
+
+            </div>
+
+            <div class="card">
+
+                <h2>Target Settings</h2>
+
+                <label>Target Humidity</label>
+
+                <input
+                    type="number"
+                    id="targetHumidity"
+                >
+
+                <label>Target CO2</label>
+
+                <input
+                    type="number"
+                    id="targetCO2"
+                >
+
+                <button
+                    class="primary-button"
+                    onclick="setTargets()"
+                >
+                    Save Targets
+                </button>
+
+            </div>
+
+            <div class="card">
+
+                <h2>Manual Controls</h2>
+
+                <button
+                    class="primary-button"
+                    onclick="fetch('/toggle-auto')"
+                >
+                    Toggle AUTO
+                </button>
+
+                <div class="button-row">
+
+                    <button onclick="fetch('/fan/on')">
+                        Fan ON
+                    </button>
+
+                    <button onclick="fetch('/fan/off')">
+                        Fan OFF
+                    </button>
+
+                </div>
+
+                <div class="button-row">
+
+                    <button onclick="fetch('/mister/on')">
+                        Mister ON
+                    </button>
+
+                    <button onclick="fetch('/mister/off')">
+                        Mister OFF
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="chart-card">
+
+            <h2>Humidity History</h2>
+
+            <canvas id="humidityChart"></canvas>
+
+        </div>
+
+        <div class="chart-card">
+
+            <h2>CO2 History</h2>
+
+            <canvas id="co2Chart"></canvas>
+
+        </div>
+
+    </div>
+
 
     <script>
 
+    let targetsInitialized = false;
+
+
+    async function setTargets() {
+
+        const humidity =
+            document.getElementById(
+                'targetHumidity'
+            ).value;
+
+        const co2 =
+            document.getElementById(
+                'targetCO2'
+            ).value;
+
+        await fetch(
+            `/set-targets/${humidity}/${co2}`
+        );
+    }
+
+
     async function updateData() {
 
-        const response = await fetch('/api/data');
-        const data = await response.json();
+        const response =
+            await fetch('/api/data');
 
-        document.getElementById('humidity').innerText = data.humidity;
-        document.getElementById('co2').innerText = data.co2;
-        document.getElementById('temperature').innerText = data.temperature;
+        const data =
+            await response.json();
 
-        document.getElementById('fan').innerText =
-            data.fan_on ? "ON" : "OFF";
 
-        document.getElementById('mister').innerText =
-            data.mister_on ? "ON" : "OFF";
+        document.getElementById(
+            'humidity'
+        ).innerText = data.humidity;
 
-        document.getElementById('mode').innerText =
-            data.auto_mode ? "AUTO" : "MANUAL";
+        document.getElementById(
+            'co2'
+        ).innerText = data.co2;
+
+        document.getElementById(
+            'temperature'
+        ).innerText = data.temperature;
+
+
+        document.getElementById(
+            'fan'
+        ).innerText =
+            data.fan_on
+            ? 'ONLINE'
+            : 'OFFLINE';
+
+        document.getElementById(
+            'mister'
+        ).innerText =
+            data.mister_on
+            ? 'ONLINE'
+            : 'OFFLINE';
+
+        document.getElementById(
+            'mode'
+        ).innerText =
+            data.auto_mode
+            ? 'AUTO'
+            : 'MANUAL';
+
+
+        const modePill =
+            document.getElementById(
+                'modePill'
+            );
+
+        modePill.innerText =
+            data.auto_mode
+            ? 'AUTO MODE'
+            : 'MANUAL MODE';
+
+        modePill.className =
+            data.auto_mode
+            ? 'status-pill auto-pill'
+            : 'status-pill manual-pill';
+
+
+        if (!targetsInitialized) {
+
+            document.getElementById(
+                'targetHumidity'
+            ).value =
+                data.target_humidity;
+
+            document.getElementById(
+                'targetCO2'
+            ).value =
+                data.target_co2;
+
+            targetsInitialized = true;
+        }
+
+
+        const alarmBanner =
+            document.getElementById(
+                'alarmBanner'
+            );
+
+        const alarmText =
+            document.getElementById(
+                'alarmText'
+            );
+
+        if (data.alarm_active) {
+
+            alarmBanner.style.display =
+                'block';
+
+            alarmText.innerText =
+                'ALARM: ' +
+                data.alarm_message;
+
+        } else {
+
+            alarmBanner.style.display =
+                'none';
+        }
+
+
+        const sensorBanner =
+            document.getElementById(
+                'sensorBanner'
+            );
+
+        const sensorText =
+            document.getElementById(
+                'sensorText'
+            );
+
+        if (data.sensor_fault) {
+
+            sensorBanner.style.display =
+                'block';
+
+            sensorText.innerText =
+                'SENSOR FAULT: ' +
+                data.sensor_fault_message;
+
+        } else {
+
+            sensorBanner.style.display =
+                'none';
+        }
     }
+
 
     setInterval(updateData, 1000);
 
     updateData();
 
 
-    const humidityCtx = document.getElementById('humidityChart');
+    const humidityCtx =
+        document.getElementById(
+            'humidityChart'
+        );
 
-    const humidityChart = new Chart(humidityCtx, {
+    const humidityChart =
+        new Chart(humidityCtx, {
+
         type: 'line',
+
         data: {
+
             labels: [],
+
             datasets: [{
+
                 label: 'Humidity %',
-                data: []
+
+                data: [],
+
+                tension: 0.3
+
             }]
         }
     });
 
 
-    const co2Ctx = document.getElementById('co2Chart');
+    const co2Ctx =
+        document.getElementById(
+            'co2Chart'
+        );
 
-    const co2Chart = new Chart(co2Ctx, {
+    const co2Chart =
+        new Chart(co2Ctx, {
+
         type: 'line',
+
         data: {
+
             labels: [],
+
             datasets: [{
+
                 label: 'CO2 ppm',
-                data: []
+
+                data: [],
+
+                tension: 0.3
+
             }]
         }
     });
@@ -128,22 +396,47 @@
 
     async function updateCharts() {
 
-        const response = await fetch('/api/history');
-        const history = await response.json();
+        const response =
+            await fetch('/api/history');
 
-        const labels = history.map((_, index) => index);
+        const history =
+            await response.json();
 
-        const humidityData = history.map(row => row.humidity);
-        const co2Data = history.map(row => row.co2);
 
-        humidityChart.data.labels = labels;
-        humidityChart.data.datasets[0].data = humidityData;
+        const labels =
+            history.map(
+                (_, index) => index
+            );
+
+        const humidityData =
+            history.map(
+                row => row.humidity
+            );
+
+        const co2Data =
+            history.map(
+                row => row.co2
+            );
+
+
+        humidityChart.data.labels =
+            labels;
+
+        humidityChart.data.datasets[0].data =
+            humidityData;
+
         humidityChart.update();
 
-        co2Chart.data.labels = labels;
-        co2Chart.data.datasets[0].data = co2Data;
+
+        co2Chart.data.labels =
+            labels;
+
+        co2Chart.data.datasets[0].data =
+            co2Data;
+
         co2Chart.update();
     }
+
 
     setInterval(updateCharts, 3000);
 

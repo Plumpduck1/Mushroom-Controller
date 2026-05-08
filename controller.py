@@ -1,7 +1,10 @@
 import time
 import simulation
 import climate
-import logger
+import alarms
+import validator
+import database
+
 from state import state
 
 
@@ -10,9 +13,20 @@ def run():
     while True:
 
         climate.update_controls()
+
         simulation.update_environment()
 
-        logger.log_data(
+        validator.validate_sensors()
+
+        alarms.check_alarms()
+
+        if state.fan_on:
+            state.total_fan_seconds += 1
+
+        if state.mister_on:
+            state.total_mister_seconds += 1
+
+        database.log_telemetry(
             state.humidity,
             state.co2,
             state.temperature,
