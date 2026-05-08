@@ -5,6 +5,8 @@
     <title>Mushroom Controller</title>
 
     <link rel="stylesheet" href="/static/style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -23,44 +25,52 @@
 
     <hr>
 
-<button
-    onclick="fetch('/toggle-auto')"
-    title="AUTO mode lets the system control fan and mister automatically based on humidity and CO2 thresholds. MANUAL mode disables automation so you can control devices yourself."
->
-    Toggle AUTO
-</button>
+    <button
+        onclick="fetch('/toggle-auto')"
+        title="AUTO mode lets the system control fan and mister automatically based on humidity and CO2 thresholds. MANUAL mode disables automation so you can control devices yourself."
+    >
+        Toggle AUTO
+    </button>
 
-<br><br>
+    <br><br>
 
-<button
-    onclick="fetch('/fan/on')"
-    title="Turns fan ON. Fan lowers CO2 by bringing in fresh air, but also slightly lowers humidity."
->
-    Fan ON
-</button>
+    <button
+        onclick="fetch('/fan/on')"
+        title="Turns fan ON. Fan lowers CO2 by bringing in fresh air, but also slightly lowers humidity."
+    >
+        Fan ON
+    </button>
 
-<button
-    onclick="fetch('/fan/off')"
-    title="Turns fan OFF. CO2 will slowly build up again, and humidity will stabilize more easily."
->
-    Fan OFF
-</button>
+    <button
+        onclick="fetch('/fan/off')"
+        title="Turns fan OFF. CO2 will slowly build up again, and humidity will stabilize more easily."
+    >
+        Fan OFF
+    </button>
 
-<br><br>
+    <br><br>
 
-<button
-    onclick="fetch('/mister/on')"
-    title="Turns mister ON. Mister increases chamber humidity."
->
-    Mister ON
-</button>
+    <button
+        onclick="fetch('/mister/on')"
+        title="Turns mister ON. Mister increases chamber humidity."
+    >
+        Mister ON
+    </button>
 
-<button
-    onclick="fetch('/mister/off')"
-    title="Turns mister OFF. Humidity will slowly decrease naturally over time."
->
-    Mister OFF
-</button>
+    <button
+        onclick="fetch('/mister/off')"
+        title="Turns mister OFF. Humidity will slowly decrease naturally over time."
+    >
+        Mister OFF
+    </button>
+
+    <hr>
+
+    <h2>Humidity History</h2>
+    <canvas id="humidityChart"></canvas>
+
+    <h2>CO2 History</h2>
+    <canvas id="co2Chart"></canvas>
 
     <script>
 
@@ -86,6 +96,58 @@
     setInterval(updateData, 1000);
 
     updateData();
+
+
+    const humidityCtx = document.getElementById('humidityChart');
+
+    const humidityChart = new Chart(humidityCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Humidity %',
+                data: []
+            }]
+        }
+    });
+
+
+    const co2Ctx = document.getElementById('co2Chart');
+
+    const co2Chart = new Chart(co2Ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'CO2 ppm',
+                data: []
+            }]
+        }
+    });
+
+
+    async function updateCharts() {
+
+        const response = await fetch('/api/history');
+        const history = await response.json();
+
+        const labels = history.map((_, index) => index);
+
+        const humidityData = history.map(row => row.humidity);
+        const co2Data = history.map(row => row.co2);
+
+        humidityChart.data.labels = labels;
+        humidityChart.data.datasets[0].data = humidityData;
+        humidityChart.update();
+
+        co2Chart.data.labels = labels;
+        co2Chart.data.datasets[0].data = co2Data;
+        co2Chart.update();
+    }
+
+    setInterval(updateCharts, 3000);
+
+    updateCharts();
 
     </script>
 

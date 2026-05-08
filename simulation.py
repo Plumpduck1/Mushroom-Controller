@@ -1,26 +1,18 @@
-humidity = 92
-co2 = 800
-temperature = 21.5
-
-fan_on = False
-mister_on = False
-
-auto_mode = True
+from state import state
 
 
 def update_environment():
-    global humidity, co2
 
-    if mister_on:
-        humidity += 0.5
+    if state.mister_on:
+        state.humidity += 0.5
     else:
-        humidity -= 0.2
+        state.humidity -= 0.2
 
-    if fan_on:
-        co2 -= 50
-        humidity -= 0.3
+    if state.fan_on:
+        state.co2 -= 50
+        state.humidity -= 0.3
     else:
-        co2 += 20
+        state.co2 += 20
 
-    humidity = max(70, min(100, humidity))
-    co2 = max(400, min(2000, co2))
+    state.humidity = max(70, min(100, state.humidity))
+    state.co2 = max(400, min(2000, state.co2))
