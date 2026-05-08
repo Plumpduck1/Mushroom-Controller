@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mushroom Controller</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <h1>Mushroom Controller</h1>
+
+    <p>Humidity: <span id="humidity">--</span>%</p>
+    <p>CO2: <span id="co2">--</span> ppm</p>
+    <p>Temperature: <span id="temperature">--</span>°C</p>
+
+    <hr>
+
+    <p>Fan: <span id="fan">--</span></p>
+    <p>Mister: <span id="mister">--</span></p>
+    <p>Mode: <span id="mode">--</span></p>
+
+    <hr>
+
+<button
+    onclick="fetch('/toggle-auto')"
+    title="AUTO mode lets the system control fan and mister automatically based on humidity and CO2 thresholds. MANUAL mode disables automation so you can control devices yourself."
+>
+    Toggle AUTO
+</button>
+
+<br><br>
+
+<button
+    onclick="fetch('/fan/on')"
+    title="Turns fan ON. Fan lowers CO2 by bringing in fresh air, but also slightly lowers humidity."
+>
+    Fan ON
+</button>
+
+<button
+    onclick="fetch('/fan/off')"
+    title="Turns fan OFF. CO2 will slowly build up again, and humidity will stabilize more easily."
+>
+    Fan OFF
+</button>
+
+<br><br>
+
+<button
+    onclick="fetch('/mister/on')"
+    title="Turns mister ON. Mister increases chamber humidity."
+>
+    Mister ON
+</button>
+
+<button
+    onclick="fetch('/mister/off')"
+    title="Turns mister OFF. Humidity will slowly decrease naturally over time."
+>
+    Mister OFF
+</button>
+
+    <script>
+
+    async function updateData() {
+
+        const response = await fetch('/api/data');
+        const data = await response.json();
+
+        document.getElementById('humidity').innerText = data.humidity;
+        document.getElementById('co2').innerText = data.co2;
+        document.getElementById('temperature').innerText = data.temperature;
+
+        document.getElementById('fan').innerText =
+            data.fan_on ? "ON" : "OFF";
+
+        document.getElementById('mister').innerText =
+            data.mister_on ? "ON" : "OFF";
+
+        document.getElementById('mode').innerText =
+            data.auto_mode ? "AUTO" : "MANUAL";
+    }
+
+    setInterval(updateData, 1000);
+
+    updateData();
+
+    </script>
+
+</body>
+</html>
