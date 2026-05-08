@@ -1,4 +1,4 @@
-from state import state
+from core.state import state
 
 
 def update_environment():

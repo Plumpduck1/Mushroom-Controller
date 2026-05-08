@@ -1,11 +1,11 @@
 from flask import Flask, jsonify, render_template
 import threading
 
-import controller
-import database
-import config_manager
+from core import controller
+from core.state import state
 
-from state import state
+from storage import database
+from storage import config_manager
 
 app = Flask(__name__)
 

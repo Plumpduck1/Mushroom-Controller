@@ -27,6 +27,8 @@ class EnvironmentState:
 
         self.total_fan_seconds = 0
         self.total_mister_seconds = 0
+        
+        self.light_on = False
 
 
 state = EnvironmentState()

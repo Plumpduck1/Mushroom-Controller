@@ -1,7 +1,7 @@
-from state import state
-import sensors
-import actuators
+from core.state import state
 
+from hardware import sensors
+from hardware import actuators
 
 def update_controls():
 
