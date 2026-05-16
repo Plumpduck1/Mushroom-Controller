@@ -28,9 +28,29 @@ def home():
 def data():
 
     return jsonify({
-        "humidity": round(state.humidity, 1),
-        "co2": state.co2,
-        "temperature": state.temperature,
+        "humidity": (
+    round(state.humidity, 1)
+    if state.humidity is not None
+    else None
+),
+
+"co2": (
+    round(state.co2, 1)
+    if state.co2 is not None
+    else None
+),
+
+"temperature": (
+    round(state.temperature, 1)
+    if state.temperature is not None
+    else None
+),
+
+"pressure": (
+    round(state.pressure, 1)
+    if state.pressure is not None
+    else None
+),
 
         "fan_on": state.fan_on,
         "mister_on": state.mister_on,

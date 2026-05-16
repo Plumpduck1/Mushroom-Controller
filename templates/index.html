@@ -2,11 +2,15 @@
 <html>
 
 <head>
+
     <title>Mushroom Controller</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link rel="stylesheet" href="/static/style.css">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
@@ -17,11 +21,17 @@
 
             <h1>Mushroom Controller</h1>
 
-            <div class="status-pill auto-pill" id="modePill">
+            <div
+                class="status-pill auto-pill"
+                id="modePill"
+            >
                 AUTO MODE
             </div>
 
         </div>
+
+
+        <!-- BANNERS -->
 
         <div
             id="alarmBanner"
@@ -31,6 +41,7 @@
             ⚠️ <span id="alarmText"></span>
         </div>
 
+
         <div
             id="sensorBanner"
             class="banner sensor-banner"
@@ -39,7 +50,11 @@
             🔧 <span id="sensorText"></span>
         </div>
 
+
+        <!-- STATS -->
+
         <div class="stats-grid">
+
 
             <div class="card">
 
@@ -50,6 +65,7 @@
                 </div>
 
             </div>
+
 
             <div class="card">
 
@@ -62,6 +78,7 @@
 
             </div>
 
+
             <div class="card">
 
                 <h3>Temperature</h3>
@@ -73,9 +90,27 @@
 
             </div>
 
+
+            <div class="card">
+
+                <h3>Pressure</h3>
+
+                <div class="big-stat">
+                    <span id="pressure">--</span>
+                    <span class="unit">hPa</span>
+                </div>
+
+            </div>
+
         </div>
 
+
+        <!-- CONTROLS -->
+
         <div class="controls-grid">
+
+
+            <!-- DEVICE STATUS -->
 
             <div class="card">
 
@@ -97,6 +132,9 @@
                 </div>
 
             </div>
+
+
+            <!-- TARGETS -->
 
             <div class="card">
 
@@ -124,6 +162,9 @@
                 </button>
 
             </div>
+
+
+            <!-- MANUAL CONTROLS -->
 
             <div class="card">
 
@@ -164,6 +205,9 @@
 
         </div>
 
+
+        <!-- CHARTS -->
+
         <div class="chart-card">
 
             <h2>Humidity History</h2>
@@ -171,6 +215,7 @@
             <canvas id="humidityChart"></canvas>
 
         </div>
+
 
         <div class="chart-card">
 
@@ -183,269 +228,298 @@
     </div>
 
 
-    <script>
 
-    let targetsInitialized = false;
+<script>
+
+let targetsInitialized = false;
 
 
-    async function setTargets() {
 
-        const humidity =
-            document.getElementById(
-                'targetHumidity'
-            ).value;
+async function setTargets() {
 
-        const co2 =
-            document.getElementById(
-                'targetCO2'
-            ).value;
+    const humidity =
+        document.getElementById(
+            'targetHumidity'
+        ).value;
 
-        await fetch(
-            `/set-targets/${humidity}/${co2}`
+    const co2 =
+        document.getElementById(
+            'targetCO2'
+        ).value;
+
+    await fetch(
+        `/set-targets/${humidity}/${co2}`
+    );
+}
+
+
+
+async function updateData() {
+
+    const response =
+        await fetch('/api/data');
+
+    const data =
+        await response.json();
+
+
+    // STATS
+
+    document.getElementById(
+        'humidity'
+    ).innerText =
+        data.humidity;
+
+    document.getElementById(
+        'co2'
+    ).innerText =
+        data.co2;
+
+    document.getElementById(
+        'temperature'
+    ).innerText =
+        data.temperature;
+
+    document.getElementById(
+        'pressure'
+    ).innerText =
+        data.pressure;
+
+
+    // STATUS
+
+    document.getElementById(
+        'fan'
+    ).innerText =
+        data.fan_on
+        ? 'ONLINE'
+        : 'OFFLINE';
+
+    document.getElementById(
+        'mister'
+    ).innerText =
+        data.mister_on
+        ? 'ONLINE'
+        : 'OFFLINE';
+
+    document.getElementById(
+        'mode'
+    ).innerText =
+        data.auto_mode
+        ? 'AUTO'
+        : 'MANUAL';
+
+
+    // MODE PILL
+
+    const modePill =
+        document.getElementById(
+            'modePill'
         );
+
+    modePill.innerText =
+        data.auto_mode
+        ? 'AUTO MODE'
+        : 'MANUAL MODE';
+
+    modePill.className =
+        data.auto_mode
+        ? 'status-pill auto-pill'
+        : 'status-pill manual-pill';
+
+
+    // TARGETS
+
+    if (!targetsInitialized) {
+
+        document.getElementById(
+            'targetHumidity'
+        ).value =
+            data.target_humidity;
+
+        document.getElementById(
+            'targetCO2'
+        ).value =
+            data.target_co2;
+
+        targetsInitialized = true;
     }
 
 
-    async function updateData() {
+    // ALARMS
 
-        console.log("updating...");
-
-
-        const response =
-            await fetch('/api/data');
-
-        const data =
-            await response.json();
-
-
+    const alarmBanner =
         document.getElementById(
-            'humidity'
-        ).innerText = data.humidity;
+            'alarmBanner'
+        );
 
+    const alarmText =
         document.getElementById(
-            'co2'
-        ).innerText = data.co2;
+            'alarmText'
+        );
 
-        document.getElementById(
-            'temperature'
-        ).innerText = data.temperature;
+    if (data.alarm_active) {
 
+        alarmBanner.style.display =
+            'block';
 
-        document.getElementById(
-            'fan'
-        ).innerText =
-            data.fan_on
-            ? 'ONLINE'
-            : 'OFFLINE';
+        alarmText.innerText =
+            'ALARM: ' +
+            data.alarm_message;
 
-        document.getElementById(
-            'mister'
-        ).innerText =
-            data.mister_on
-            ? 'ONLINE'
-            : 'OFFLINE';
+    } else {
 
-        document.getElementById(
-            'mode'
-        ).innerText =
-            data.auto_mode
-            ? 'AUTO'
-            : 'MANUAL';
-
-
-        const modePill =
-            document.getElementById(
-                'modePill'
-            );
-
-        modePill.innerText =
-            data.auto_mode
-            ? 'AUTO MODE'
-            : 'MANUAL MODE';
-
-        modePill.className =
-            data.auto_mode
-            ? 'status-pill auto-pill'
-            : 'status-pill manual-pill';
-
-
-        if (!targetsInitialized) {
-
-            document.getElementById(
-                'targetHumidity'
-            ).value =
-                data.target_humidity;
-
-            document.getElementById(
-                'targetCO2'
-            ).value =
-                data.target_co2;
-
-            targetsInitialized = true;
-        }
-
-
-        const alarmBanner =
-            document.getElementById(
-                'alarmBanner'
-            );
-
-        const alarmText =
-            document.getElementById(
-                'alarmText'
-            );
-
-        if (data.alarm_active) {
-
-            alarmBanner.style.display =
-                'block';
-
-            alarmText.innerText =
-                'ALARM: ' +
-                data.alarm_message;
-
-        } else {
-
-            alarmBanner.style.display =
-                'none';
-        }
-
-
-        const sensorBanner =
-            document.getElementById(
-                'sensorBanner'
-            );
-
-        const sensorText =
-            document.getElementById(
-                'sensorText'
-            );
-
-        if (data.sensor_fault) {
-
-            sensorBanner.style.display =
-                'block';
-
-            sensorText.innerText =
-                'SENSOR FAULT: ' +
-                data.sensor_fault_message;
-
-        } else {
-
-            sensorBanner.style.display =
-                'none';
-        }
+        alarmBanner.style.display =
+            'none';
     }
 
 
-    setInterval(updateData, 1000);
+    // SENSOR FAULTS
 
-    updateData();
-
-
-    const humidityCtx =
+    const sensorBanner =
         document.getElementById(
-            'humidityChart'
+            'sensorBanner'
         );
 
-    const humidityChart =
-        new Chart(humidityCtx, {
-
-        type: 'line',
-
-        data: {
-
-            labels: [],
-
-            datasets: [{
-
-                label: 'Humidity %',
-
-                data: [],
-
-                tension: 0.3
-
-            }]
-        }
-    });
-
-
-    const co2Ctx =
+    const sensorText =
         document.getElementById(
-            'co2Chart'
+            'sensorText'
         );
 
-    const co2Chart =
-        new Chart(co2Ctx, {
+    if (data.sensor_fault) {
 
-        type: 'line',
+        sensorBanner.style.display =
+            'block';
 
-        data: {
+        sensorText.innerText =
+            'SENSOR FAULT: ' +
+            data.sensor_fault_message;
 
-            labels: [],
+    } else {
 
-            datasets: [{
-
-                label: 'CO2 ppm',
-
-                data: [],
-
-                tension: 0.3
-
-            }]
-        }
-    });
-
-
-    async function updateCharts() {
-
-        const response =
-            await fetch('/api/history');
-
-        const history =
-            await response.json();
-
-
-        const labels =
-            history.map(
-                (_, index) => index
-            );
-
-        const humidityData =
-            history.map(
-                row => row.humidity
-            );
-
-        const co2Data =
-            history.map(
-                row => row.co2
-            );
-
-
-        humidityChart.data.labels =
-            labels;
-
-        humidityChart.data.datasets[0].data =
-            humidityData;
-
-        humidityChart.update();
-
-
-        co2Chart.data.labels =
-            labels;
-
-        co2Chart.data.datasets[0].data =
-            co2Data;
-
-        co2Chart.update();
+        sensorBanner.style.display =
+            'none';
     }
+}
 
 
-    setInterval(updateCharts, 3000);
+setInterval(updateData, 1000);
 
-    updateCharts();
+updateData();
 
-    </script>
+
+
+// ---------- HUMIDITY CHART ----------
+
+const humidityCtx =
+    document.getElementById(
+        'humidityChart'
+    );
+
+const humidityChart =
+    new Chart(humidityCtx, {
+
+    type: 'line',
+
+    data: {
+
+        labels: [],
+
+        datasets: [{
+
+            label: 'Humidity %',
+
+            data: [],
+
+            tension: 0.3
+
+        }]
+    }
+});
+
+
+
+// ---------- CO2 CHART ----------
+
+const co2Ctx =
+    document.getElementById(
+        'co2Chart'
+    );
+
+const co2Chart =
+    new Chart(co2Ctx, {
+
+    type: 'line',
+
+    data: {
+
+        labels: [],
+
+        datasets: [{
+
+            label: 'CO2 ppm',
+
+            data: [],
+
+            tension: 0.3
+
+        }]
+    }
+});
+
+
+
+// ---------- UPDATE CHARTS ----------
+
+async function updateCharts() {
+
+    const response =
+        await fetch('/api/history');
+
+    const history =
+        await response.json();
+
+
+    const labels =
+        history.map(
+            (_, index) => index
+        );
+
+    const humidityData =
+        history.map(
+            row => row.humidity
+        );
+
+    const co2Data =
+        history.map(
+            row => row.co2
+        );
+
+
+    humidityChart.data.labels =
+        labels;
+
+    humidityChart.data.datasets[0].data =
+        humidityData;
+
+    humidityChart.update();
+
+
+    co2Chart.data.labels =
+        labels;
+
+    co2Chart.data.datasets[0].data =
+        co2Data;
+
+    co2Chart.update();
+}
+
+
+setInterval(updateCharts, 3000);
+
+updateCharts();
+
+</script>
 
 </body>
 </html>

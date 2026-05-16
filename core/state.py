@@ -8,6 +8,7 @@ class EnvironmentState:
         self.humidity = 92
         self.co2 = 800
         self.temperature = 21.5
+        self.pressure = 0
 
         self.fan_on = False
         self.mister_on = False
