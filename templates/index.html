@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Mushroom Controller</title>
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link
+        rel="stylesheet"
+        href="/static/style.css"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+
+    <!-- ============================================ -->
+    <!-- HEADER -->
+    <!-- ============================================ -->
+
+    <div class="header">
+
+        <h1>
+            Mushroom Controller
+        </h1>
+
+        <div
+            class="status-pill auto-pill"
+            id="modePill"
+        >
+            AUTO MODE
+        </div>
+
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- BANNERS -->
+    <!-- ============================================ -->
+
+    <div
+        id="alarmBanner"
+        class="banner alarm-banner"
+        style="display:none;"
+    >
+        ⚠️ <span id="alarmText"></span>
+    </div>
+
+
+    <div
+        id="sensorBanner"
+        class="banner sensor-banner"
+        style="display:none;"
+    >
+        🔧 <span id="sensorText"></span>
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- STATS -->
+    <!-- ============================================ -->
+
+    <div class="stats-grid">
+
+
+        <!-- HUMIDITY -->
+
+        <div class="card">
+
+            <h3>Humidity</h3>
+
+            <div class="big-stat">
+
+                <span id="humidity">
+                    --
+                </span>
+
+                <span class="unit">
+                    %
+                </span>
+
+            </div>
+
+            <div
+                class="mini-status"
+                id="humidityStatus"
+            >
+                Stable
+            </div>
+
+        </div>
+
+
+        <!-- CO2 -->
+
+        <div class="card">
+
+            <h3>CO2</h3>
+
+            <div class="big-stat">
+
+                <span id="co2">
+                    --
+                </span>
+
+                <span class="unit">
+                    ppm
+                </span>
+
+            </div>
+
+            <div
+                class="mini-status"
+                id="co2Status"
+            >
+                Stable
+            </div>
+
+        </div>
+
+
+        <!-- TEMPERATURE -->
+
+        <div class="card">
+
+            <h3>Temperature</h3>
+
+            <div class="big-stat">
+
+                <span id="temperature">
+                    --
+                </span>
+
+                <span class="unit">
+                    °C
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- PRESSURE -->
+
+        <div class="card">
+
+            <h3>Pressure</h3>
+
+            <div class="big-stat">
+
+                <span id="pressure">
+                    --
+                </span>
+
+                <span class="unit">
+                    hPa
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- CONTROLS -->
+    <!-- ============================================ -->
+
+    <div class="controls-grid">
+
+
+        <!-- DEVICE STATUS -->
+
+        <div class="card">
+
+            <h2>
+                Device Status
+            </h2>
+
+            <div class="device-row">
+
+                <span>Fan</span>
+
+                <span
+                    class="device-state"
+                    id="fan"
+                >
+                    --
+                </span>
+
+            </div>
+
+            <div class="device-row">
+
+                <span>Mister</span>
+
+                <span
+                    class="device-state"
+                    id="mister"
+                >
+                    --
+                </span>
+
+            </div>
+
+            <div class="device-row">
+
+                <span>Mode</span>
+
+                <span
+                    class="device-state"
+                    id="mode"
+                >
+                    --
+                </span>
+
+            </div>
+
+            <div class="device-row">
+
+                <span>Fan PWM</span>
+
+                <span
+                    class="device-state"
+                    id="fanSpeed"
+                >
+                    0%
+                </span>
+
+            </div>
+
+            <div class="device-row">
+
+                <span>Airflow</span>
+
+                <span
+                    class="device-state"
+                    id="fanAirflow"
+                >
+                    OFF
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- TARGET SETTINGS -->
+
+        <div class="card">
+
+            <h2>
+                Target Settings
+            </h2>
+
+            <label>
+                Target Humidity
+            </label>
+
+            <input
+                type="number"
+                id="targetHumidity"
+            >
+
+            <label>
+                Target CO2
+            </label>
+
+            <input
+                type="number"
+                id="targetCO2"
+            >
+
+            <button
+                class="primary-button"
+                onclick="setTargets()"
+            >
+                Save Targets
+            </button>
+
+        </div>
+
+
+        <!-- FAN CONTROLLER -->
+
+        <div class="card">
+
+            <h2>
+                Fan Controller
+            </h2>
+
+            <div class="device-row">
+
+                <span>Reason</span>
+
+                <span
+                    class="device-state"
+                    id="fanReason"
+                >
+                    Idle
+                </span>
+
+            </div>
+
+            <div class="device-row">
+
+                <span>RPM</span>
+
+                <span
+                    class="device-state"
+                    id="fanRPM"
+                >
+                    0
+                </span>
+
+            </div>
+
+            <label>
+                Manual PWM Override
+            </label>
+
+            <input
+                type="range"
+                id="manualFanPWM"
+                min="0"
+                max="100"
+                value="0"
+            >
+
+            <div
+                class="slider-value"
+                id="manualFanValue"
+            >
+                0%
+            </div>
+
+            <button
+                class="primary-button"
+                onclick="setManualFanPWM()"
+            >
+                Apply Manual PWM
+            </button>
+
+        </div>
+
+
+        <!-- MANUAL CONTROLS -->
+
+        <div class="card">
+
+            <h2>
+                Manual Controls
+            </h2>
+
+            <button
+                class="primary-button"
+                onclick="toggleAutoMode()"
+            >
+                Toggle AUTO
+            </button>
+
+            <div class="button-row">
+
+                <button onclick="fanOn()">
+                    Fan ON
+                </button>
+
+                <button onclick="fanOff()">
+                    Fan OFF
+                </button>
+
+            </div>
+
+            <div class="button-row">
+
+                <button onclick="misterOn()">
+                    Mister ON
+                </button>
+
+                <button onclick="misterOff()">
+                    Mister OFF
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================ -->
+    <!-- CHARTS -->
+    <!-- ============================================ -->
+
+    <div class="chart-card">
+
+        <h2>
+            Humidity History
+        </h2>
+
+        <canvas id="humidityChart"></canvas>
+
+    </div>
+
+
+    <div class="chart-card">
+
+        <h2>
+            CO2 History
+        </h2>
+
+        <canvas id="co2Chart"></canvas>
+
+    </div>
+
+</div>
+
+<script>
+
+
+// ============================================
+// GLOBAL STATE
+// ============================================
+
+let targetsInitialized = false
+
+
+// ============================================
+// TARGET SETTINGS
+// ============================================
+
+async function setTargets() {
+
+    const humidity =
+        document.getElementById(
+            'targetHumidity'
+        ).value
+
+    const co2 =
+        document.getElementById(
+            'targetCO2'
+        ).value
+
+    await fetch(
+        `/set-targets/${humidity}/${co2}`
+    )
+}
+
+
+// ============================================
+// MANUAL FAN PWM
+// ============================================
+
+async function setManualFanPWM() {
+
+    const pwm =
+        document.getElementById(
+            'manualFanPWM'
+        ).value
+
+    document.getElementById(
+        'manualFanValue'
+    ).innerText =
+        pwm + '%'
+
+    await fetch(
+        `/fan/pwm/${pwm}`
+    )
+}
+
+
+// ============================================
+// MANUAL CONTROLS
+// ============================================
+
+async function fanOn() {
+
+    await fetch('/fan/on')
+}
+
+async function fanOff() {
+
+    await fetch('/fan/off')
+}
+
+async function misterOn() {
+
+    await fetch('/mister/on')
+}
+
+async function misterOff() {
+
+    await fetch('/mister/off')
+}
+
+async function toggleAutoMode() {
+
+    await fetch('/toggle-auto')
+}
+
+
+// ============================================
+// UPDATE LIVE DATA
+// ============================================
+
+async function updateData() {
+
+    try {
+
+        const response =
+            await fetch('/api/data')
+
+        const data =
+            await response.json()
+
+        console.log(data)
+
+
+        // ============================================
+        // SENSOR STATS
+        // ============================================
+
+        document.getElementById(
+            'humidity'
+        ).innerText =
+            (
+                data.humidity ??
+                '--'
+            )
+
+        document.getElementById(
+            'co2'
+        ).innerText =
+            (
+                data.co2 ??
+                '--'
+            )
+
+        document.getElementById(
+            'temperature'
+        ).innerText =
+            (
+                data.temperature ??
+                '--'
+            )
+
+        document.getElementById(
+            'pressure'
+        ).innerText =
+            (
+                data.pressure ??
+                '--'
+            )
+
+
+        // ============================================
+        // DEVICE STATES
+        // ============================================
+
+        document.getElementById(
+            'fan'
+        ).innerText =
+            data.fan_on
+            ? 'ONLINE'
+            : 'OFFLINE'
+
+        document.getElementById(
+            'mister'
+        ).innerText =
+            data.mister_on
+            ? 'ONLINE'
+            : 'OFFLINE'
+
+        document.getElementById(
+            'mode'
+        ).innerText =
+            data.auto_mode
+            ? 'AUTO'
+            : 'MANUAL'
+
+
+        // ============================================
+        // FAN INFO
+        // ============================================
+
+        const fanSpeed =
+            (
+                data.fan_speed ?? 0
+            )
+
+        document.getElementById(
+            'fanSpeed'
+        ).innerText =
+            fanSpeed + '%'
+
+
+        document.getElementById(
+            'fanReason'
+        ).innerText =
+            (
+                data.fan_reason ??
+                'Idle'
+            )
+
+
+        document.getElementById(
+            'fanRPM'
+        ).innerText =
+            (
+                data.fan_rpm ?? 0
+            )
+
+
+        // ============================================
+        // AIRFLOW LABEL
+        // ============================================
+
+        if (fanSpeed <= 0) {
+
+            document.getElementById(
+                'fanAirflow'
+            ).innerText =
+                'OFF'
+
+        } else if (
+            fanSpeed < 30
+        ) {
+
+            document.getElementById(
+                'fanAirflow'
+            ).innerText =
+                'LOW'
+
+        } else if (
+            fanSpeed < 70
+        ) {
+
+            document.getElementById(
+                'fanAirflow'
+            ).innerText =
+                'MEDIUM'
+
+        } else {
+
+            document.getElementById(
+                'fanAirflow'
+            ).innerText =
+                'HIGH'
+        }
+
+
+        // ============================================
+        // MODE PILL
+        // ============================================
+
+        const modePill =
+            document.getElementById(
+                'modePill'
+            )
+
+        modePill.innerText =
+            data.auto_mode
+            ? 'AUTO MODE'
+            : 'MANUAL MODE'
+
+        modePill.className =
+            data.auto_mode
+            ? 'status-pill auto-pill'
+            : 'status-pill manual-pill'
+
+
+        // ============================================
+        // TARGETS
+        // ============================================
+
+        if (!targetsInitialized) {
+
+            document.getElementById(
+                'targetHumidity'
+            ).value =
+                (
+                    data.target_humidity ?? 90
+                )
+
+            document.getElementById(
+                'targetCO2'
+            ).value =
+                (
+                    data.target_co2 ?? 1200
+                )
+
+            targetsInitialized = true
+        }
+
+
+        // ============================================
+        // ALARMS
+        // ============================================
+
+        const alarmBanner =
+            document.getElementById(
+                'alarmBanner'
+            )
+
+        const alarmText =
+            document.getElementById(
+                'alarmText'
+            )
+
+        if (data.alarm_active) {
+
+            alarmBanner.style.display =
+                'block'
+
+            alarmText.innerText =
+                'ALARM: ' +
+                (
+                    data.alarm_message ??
+                    'Unknown'
+                )
+
+        } else {
+
+            alarmBanner.style.display =
+                'none'
+        }
+
+
+        // ============================================
+        // SENSOR FAULTS
+        // ============================================
+
+        const sensorBanner =
+            document.getElementById(
+                'sensorBanner'
+            )
+
+        const sensorText =
+            document.getElementById(
+                'sensorText'
+            )
+
+        if (data.sensor_fault) {
+
+            sensorBanner.style.display =
+                'block'
+
+            sensorText.innerText =
+                'SENSOR FAULT: ' +
+                (
+                    data.sensor_fault_message ??
+                    'Unknown'
+                )
+
+        } else {
+
+            sensorBanner.style.display =
+                'none'
+        }
+
+    } catch(error) {
+
+        console.error(
+            'Dashboard update failed:',
+            error
+        )
+    }
+}
+
+
+// ============================================
+// AUTO REFRESH
+// ============================================
+
+setInterval(
+    updateData,
+    1000
+)
+
+updateData()
+
+
+// ============================================
+// SLIDER LIVE UPDATE
+// ============================================
+
+document.getElementById(
+    'manualFanPWM'
+).addEventListener(
+    'input',
+    function() {
+
+        document.getElementById(
+            'manualFanValue'
+        ).innerText =
+            this.value + '%'
+    }
+)
+
+</script>
+
+
+</body>
+</html>
